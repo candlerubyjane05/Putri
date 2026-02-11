@@ -14,13 +14,16 @@ import {
   UserPlus,
   Shield,
   CreditCard,
-  Hash
+  Hash,
+  Settings,
+  Coins
 } from 'lucide-react';
 
 const UserManagement: React.FC = () => {
   const [users, setUsers] = useState(store.getUsers());
   const [searchTerm, setSearchTerm] = useState('');
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [fineAmount, setFineAmount] = useState(store.getFineAmount());
   
   // Modals state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -90,12 +93,19 @@ const UserManagement: React.FC = () => {
     setTimeout(() => setMessage(null), 3000);
   };
 
+  const handleUpdateSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    store.setFineAmount(fineAmount);
+    setMessage({ text: `Konfigurasi sistem berhasil diperbarui.`, type: 'success' });
+    setTimeout(() => setMessage(null), 3000);
+  };
+
   return (
     <div className="space-y-8 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Manajemen Anggota</h2>
-          <p className="text-slate-500 mt-1 font-medium">Kelola data mahasiswa, dosen, dan akun petugas.</p>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Manajemen & Konfigurasi</h2>
+          <p className="text-slate-500 mt-1 font-medium">Kelola data anggota and pengaturan parameter sistem.</p>
         </div>
         
         <div className="flex flex-wrap items-center gap-3">
@@ -128,68 +138,97 @@ const UserManagement: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-slate-50 border-b border-slate-100">
-                <th className="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Nama Lengkap</th>
-                <th className="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">NIM / NIDN</th>
-                <th className="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Username</th>
-                <th className="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Peran</th>
-                <th className="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-50">
-              {filteredUsers.map((u) => (
-                <tr key={u.id} className="hover:bg-slate-50 transition-colors group">
-                  <td className="px-8 py-5">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
-                        {u.nama.charAt(0)}
-                      </div>
-                      <span className="font-bold text-slate-800">{u.nama}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-5">
-                    <span className="text-sm font-mono text-slate-600 bg-slate-100 px-2 py-1 rounded border border-slate-200">
-                      {u.nim_nidn}
-                    </span>
-                  </td>
-                  <td className="px-8 py-5">
-                    <span className="text-sm text-slate-500 font-medium">@{u.username}</span>
-                  </td>
-                  <td className="px-8 py-5">
-                    <span className={`px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest shadow-sm border ${
-                      u.role === UserRole.ADMIN ? 'bg-red-50 text-red-600 border-red-100' : 
-                      u.role === UserRole.DOSEN ? 'bg-purple-50 text-purple-600 border-purple-100' : 
-                      'bg-blue-50 text-blue-600 border-blue-100'
-                    }`}>
-                      {u.role}
-                    </span>
-                  </td>
-                  <td className="px-8 py-5 text-right">
-                    <div className="flex items-center justify-end space-x-2">
-                      <button 
-                        onClick={() => { setSelectedUser(u); setIsPassModalOpen(true); }}
-                        className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                        title="Ubah Password"
-                      >
-                        <Key size={18} />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteUser(u.id, u.nama)}
-                        className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                        title="Hapus Anggota"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2 space-y-8">
+          <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100">
+                    <th className="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Nama Lengkap</th>
+                    <th className="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">NIM / NIDN</th>
+                    <th className="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest">Username</th>
+                    <th className="px-8 py-5 text-xs font-black text-slate-400 uppercase tracking-widest text-right">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {filteredUsers.map((u) => (
+                    <tr key={u.id} className="hover:bg-slate-50 transition-colors group">
+                      <td className="px-8 py-5">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                            {u.nama.charAt(0)}
+                          </div>
+                          <span className="font-bold text-slate-800">{u.nama}</span>
+                        </div>
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className="text-sm font-mono text-slate-600 bg-slate-100 px-2 py-1 rounded border border-slate-200">
+                          {u.nim_nidn}
+                        </span>
+                      </td>
+                      <td className="px-8 py-5">
+                        <span className="text-sm text-slate-500 font-medium">@{u.username}</span>
+                      </td>
+                      <td className="px-8 py-5 text-right">
+                        <div className="flex items-center justify-end space-x-2">
+                          <button 
+                            onClick={() => { setSelectedUser(u); setIsPassModalOpen(true); }}
+                            className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                            title="Ubah Password"
+                          >
+                            <Key size={18} />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteUser(u.id, u.nama)}
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                            title="Hapus Anggota"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div className="lg:col-span-1 space-y-8">
+           <div className="bg-white rounded-[2rem] shadow-sm border border-slate-100 p-8">
+              <div className="flex items-center space-x-3 mb-6">
+                <div className="p-3 bg-slate-900 text-white rounded-2xl">
+                  <Settings size={20} />
+                </div>
+                <h3 className="text-xl font-black text-slate-900">Konfigurasi Sistem</h3>
+              </div>
+              
+              <form onSubmit={handleUpdateSettings} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center">
+                    <Coins size={14} className="mr-2 text-amber-500" /> Denda Harian (Rp)
+                  </label>
+                  <input 
+                    type="number"
+                    className="w-full px-5 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 font-black text-lg transition-all"
+                    value={fineAmount}
+                    onChange={(e) => setFineAmount(parseInt(e.target.value))}
+                  />
+                  <p className="text-[10px] text-slate-400 font-medium italic">
+                    * Jumlah denda yang dikenakan per hari untuk keterlambatan pengembalian buku.
+                  </p>
+                </div>
+                
+                <button 
+                  type="submit"
+                  className="w-full py-4 bg-slate-900 hover:bg-black text-white font-black rounded-2xl shadow-xl transition-all uppercase tracking-widest text-xs"
+                >
+                  SIMPAN PENGATURAN
+                </button>
+              </form>
+           </div>
         </div>
       </div>
 

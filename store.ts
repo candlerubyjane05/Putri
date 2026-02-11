@@ -72,12 +72,16 @@ class LibraryStore {
   private buku = [...MOCK_BUKU];
   private peminjaman = [...MOCK_PEMINJAMAN];
   private fakultas = [...MOCK_FAKULTAS];
+  private fineAmount = 2000; // Default fine amount
 
   getKoleksi() { return this.koleksi; }
   getBuku() { return this.buku; }
   getPeminjaman() { return this.peminjaman; }
   getFakultas() { return this.fakultas; }
   getUsers() { return this.users; }
+  
+  getFineAmount() { return this.fineAmount; }
+  setFineAmount(amount: number) { this.fineAmount = amount; }
 
   login(username: string, password?: string) {
     const user = this.users.find(u => u.username === username);
@@ -163,11 +167,16 @@ class LibraryStore {
 
     const tglKembali = new Date();
     const jatuhTempo = new Date(p.tanggal_kembali);
-    const diffTime = Math.max(0, tglKembali.getTime() - jatuhTempo.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Reset hours for date calculation
+    const d1 = new Date(tglKembali.getFullYear(), tglKembali.getMonth(), tglKembali.getDate());
+    const d2 = new Date(jatuhTempo.getFullYear(), jatuhTempo.getMonth(), jatuhTempo.getDate());
+
+    const diffTime = d1.getTime() - d2.getTime();
+    const diffDays = Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
     
     p.tanggal_dikembalikan = tglKembali.toISOString().split('T')[0];
-    p.denda = diffDays * 2000;
+    p.denda = diffDays * this.fineAmount;
     p.status = PeminjamanStatus.DIKEMBALIKAN;
     b.status = BookStatus.TERSEDIA;
     return p;

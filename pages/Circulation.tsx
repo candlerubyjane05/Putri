@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { store } from '../store';
 import { BookStatus, PeminjamanStatus, User } from '../types';
 import { 
@@ -14,7 +14,8 @@ import {
   Contact,
   BookOpen,
   ArrowRight,
-  X
+  X,
+  Info
 } from 'lucide-react';
 
 const Circulation: React.FC = () => {
@@ -31,6 +32,17 @@ const Circulation: React.FC = () => {
   const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
 
   const history = store.getPeminjaman();
+  const currentFine = store.getFineAmount();
+
+  // Set default return date to 1 week from today when tab or student changes
+  useEffect(() => {
+    if (activeTab === 'pinjam') {
+      const today = new Date();
+      const nextWeek = new Date(today);
+      nextWeek.setDate(today.getDate() + 7);
+      setTglKembali(nextWeek.toISOString().split('T')[0]);
+    }
+  }, [activeTab, selectedMhs]);
 
   const handleScanMhs = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,7 +62,7 @@ const Circulation: React.FC = () => {
 
     const result = store.pinjamBuku(kodeBuku, selectedMhs.id, tglKembali);
     if (result) {
-      setMessage({ text: `Buku ${kodeBuku} berhasil dipinjam oleh ${selectedMhs.nama}`, type: 'success' });
+      setMessage({ text: `Buku ${kodeBuku} berhasil dipinjam oleh ${selectedMhs.nama}. Jatuh tempo: ${tglKembali}`, type: 'success' });
       resetForm();
     } else {
       setMessage({ text: 'Buku tidak ditemukan atau sedang dipinjam.', type: 'error' });
@@ -61,7 +73,7 @@ const Circulation: React.FC = () => {
     e.preventDefault();
     const result = store.kembalikanBuku(kodeBuku);
     if (result) {
-      const dendaMsg = result.denda > 0 ? ` Denda: Rp ${result.denda.toLocaleString()}` : '';
+      const dendaMsg = result.denda > 0 ? ` Denda Keterlambatan: Rp ${result.denda.toLocaleString()}` : ' Dikembalikan tepat waktu.';
       setMessage({ text: `Buku ${kodeBuku} telah dikembalikan.${dendaMsg}`, type: 'success' });
       resetForm();
     } else {
@@ -73,7 +85,11 @@ const Circulation: React.FC = () => {
     setBarcodeMhs('');
     setSelectedMhs(null);
     setKodeBuku('');
-    setTglKembali('');
+    // Reset date to 1 week from now
+    const today = new Date();
+    const nextWeek = new Date(today);
+    nextWeek.setDate(today.getDate() + 7);
+    setTglKembali(nextWeek.toISOString().split('T')[0]);
   };
 
   return (
@@ -115,6 +131,14 @@ const Circulation: React.FC = () => {
 
       {activeTab === 'pinjam' && (
         <div className="space-y-6">
+          <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start space-x-3">
+            <Info className="text-amber-600 mt-0.5" size={20} />
+            <div>
+              <p className="text-sm font-bold text-amber-800 tracking-tight">Ketentuan Peminjaman:</p>
+              <p className="text-xs text-amber-700 leading-relaxed">Jangka waktu peminjaman maksimal adalah <strong>1 minggu (7 hari)</strong>. Keterlambatan pengembalian akan dikenakan denda sebesar <strong>Rp {currentFine.toLocaleString()} per hari</strong>.</p>
+            </div>
+          </div>
+
           {!selectedMhs ? (
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 flex flex-col items-center justify-center text-center">
               <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6">
@@ -203,12 +227,12 @@ const Circulation: React.FC = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-700">Tanggal Jatuh Tempo</label>
+                      <label className="text-sm font-bold text-slate-700">Tanggal Jatuh Tempo (Otomatis +7 Hari)</label>
                       <div className="relative">
                         <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <input 
                           type="date" 
-                          className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                          className="w-full pl-10 pr-4 py-3 bg-slate-100 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-bold text-slate-600"
                           value={tglKembali}
                           onChange={(e) => setTglKembali(e.target.value)}
                           required
