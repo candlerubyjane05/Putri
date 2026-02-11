@@ -10,71 +10,75 @@ interface LoginProps {
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    const user = store.login(username);
+    const user = store.login(username, password);
     if (user) {
       onLogin(user);
     } else {
-      setError('Username tidak ditemukan. Coba: admin, dosen, mhs');
+      setError('Kombinasi Username/Password salah. Coba user: admin, dosen, mhs (Pass: 123)');
     }
   };
 
   return (
     <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl overflow-hidden">
-        <div className="p-8 bg-blue-600 text-white text-center">
-          <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Library size={40} />
+      <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-500">
+        <div className="p-10 bg-blue-600 text-white text-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
+          <div className="w-20 h-20 bg-white/20 backdrop-blur-md border border-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl animate-bounce">
+            <Library size={44} />
           </div>
-          <h2 className="text-2xl font-bold">DigiLib FH UNDANA</h2>
-          <p className="text-blue-100 text-sm mt-2">Sistem Informasi Perpustakaan Hukum</p>
+          <h2 className="text-3xl font-black tracking-tight">DigiLib FH UNDANA</h2>
+          <p className="text-blue-100 font-medium mt-2">Sistem Informasi Perpustakaan Hukum</p>
         </div>
         
-        <form onSubmit={handleLogin} className="p-8 space-y-6">
+        <form onSubmit={handleLogin} className="p-10 space-y-6">
           {error && (
-            <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm font-medium border border-red-100">
+            <div className="bg-red-50 text-red-600 p-4 rounded-2xl text-xs font-bold border border-red-100 animate-in shake duration-300">
               {error}
             </div>
           )}
           
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Username</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Username</label>
             <input 
               type="text" 
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
-              placeholder="Masukkan username anda"
+              className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold"
+              placeholder="Masukkan username..."
               required
             />
-            <p className="text-xs text-slate-400 mt-2">Contoh login: admin, dosen, atau mhs</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Kata Sandi</label>
+          <div className="space-y-1.5">
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Kata Sandi</label>
             <input 
               type="password" 
-              className="w-full px-4 py-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold"
               placeholder="••••••••"
-              disabled
+              required
             />
-            <p className="text-xs text-slate-400 mt-2">Password diabaikan untuk demonstrasi ini</p>
           </div>
 
           <button 
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg flex items-center justify-center space-x-2 transition-colors shadow-lg shadow-blue-500/30"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl flex items-center justify-center space-x-3 transition-all shadow-2xl shadow-blue-600/30 active:scale-[0.98] uppercase tracking-widest text-sm"
           >
             <LogIn size={20} />
-            <span>Masuk ke Sistem</span>
+            <span>Masuk Sistem</span>
           </button>
         </form>
         
-        <div className="px-8 pb-8 text-center">
-          <p className="text-xs text-slate-400">© 2024 Fakultas Hukum Universitas Nusa Cendana</p>
+        <div className="px-10 pb-10 text-center">
+          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-relaxed">
+            © 2024 Fakultas Hukum<br/>Universitas Nusa Cendana
+          </p>
         </div>
       </div>
     </div>

@@ -10,7 +10,8 @@ import {
   LogOut,
   User as UserIcon,
   Search,
-  MessageSquare
+  MessageSquare,
+  Users
 } from 'lucide-react';
 import { User, UserRole } from '../types';
 
@@ -31,6 +32,7 @@ const Layout: React.FC<LayoutProps> = ({ children, user, onLogout }) => {
     { name: 'Repository Digital', path: '/repository', icon: Library, roles: [UserRole.ADMIN, UserRole.DOSEN, UserRole.MAHASISWA] },
     { name: 'Inventaris Buku', path: '/inventory', icon: BookOpen, roles: [UserRole.ADMIN] },
     { name: 'Sirkulasi (Pinjam/Kembali)', path: '/circulation', icon: ArrowLeftRight, roles: [UserRole.ADMIN] },
+    { name: 'Manajemen Anggota', path: '/users', icon: Users, roles: [UserRole.ADMIN] },
     { name: 'Asisten AI', path: '/ai-assistant', icon: MessageSquare, roles: [UserRole.ADMIN, UserRole.DOSEN, UserRole.MAHASISWA] },
   ];
 

@@ -26,6 +26,7 @@ export interface User {
   nama: string;
   nim_nidn: string;
   username: string;
+  password?: string; // Added password field
   role: UserRole;
   barcode?: string;
 }

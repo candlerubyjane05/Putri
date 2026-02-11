@@ -3,9 +3,9 @@ import { User, UserRole, Koleksi, CollectionType, Buku, BookStatus, Peminjaman, 
 
 // Initial Mock Data
 export const MOCK_USERS: User[] = [
-  { id: 1, nama: 'Admin Perpustakaan FH', nim_nidn: '198501012010121001', username: 'admin', role: UserRole.ADMIN, barcode: 'KTM-ADMIN' },
-  { id: 2, nama: 'Prof. Dr. Yusak Farchne, S.H., M.H.', nim_nidn: '197503022000031002', username: 'dosen', role: UserRole.DOSEN, barcode: 'KTM-DOSEN' },
-  { id: 3, nama: 'Ahmad Bagus Pratama', nim_nidn: '2101010042', username: 'mhs', role: UserRole.MAHASISWA, barcode: 'KTM-001' }
+  { id: 1, nama: 'Admin Perpustakaan FH', nim_nidn: '198501012010121001', username: 'admin', password: '123', role: UserRole.ADMIN, barcode: 'KTM-ADMIN' },
+  { id: 2, nama: 'Prof. Dr. Yusak Farchne, S.H., M.H.', nim_nidn: '197503022000031002', username: 'dosen', password: '123', role: UserRole.DOSEN, barcode: 'KTM-DOSEN' },
+  { id: 3, nama: 'Ahmad Bagus Pratama', nim_nidn: '2101010042', username: 'mhs', password: '123', role: UserRole.MAHASISWA, barcode: 'KTM-001' }
 ];
 
 export const MOCK_FAKULTAS: Fakultas[] = [
@@ -23,7 +23,7 @@ export const MOCK_KOLEKSI: Koleksi[] = [
     jenis: CollectionType.SKRIPSI,
     fakultas_id: 1,
     tahun: 2024,
-    abstrak: 'Penelitian ini menganalisis konstruksi hukum pertanggungjawaban pidana terhadap korporasi dan individu dalam jaringan perdagangan orang. Fokus utama adalah sinkronisasi UU TPPO dengan instrumen HAM internasional.',
+    abstrak: 'Penelitian ini menganalisis konstruksi hukum pertanggungjawaban pidana terhadap korporasi and individu dalam jaringan perdagangan orang. Fokus utama adalah sinkronisasi UU TPPO dengan instrumen HAM internasional.',
     file: 'skripsi_ahmad_2024.pdf'
   },
   {
@@ -50,37 +50,13 @@ export const MOCK_BUKU: Buku[] = [
     lokasi_rak: 'A-01', 
     status: BookStatus.TERSEDIA,
     cover: 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&q=80&w=400'
-  },
-  { 
-    id: 2, 
-    kode_buku: 'LAW-002', 
-    judul: 'Hukum Acara Pidana', 
-    penulis: 'Andi Hamzah', 
-    penerbit: 'Sinar Grafika', 
-    tahun: 2019, 
-    kategori: 'Hukum Pidana', 
-    lokasi_rak: 'B-04', 
-    status: BookStatus.DIPINJAM,
-    cover: 'https://images.unsplash.com/photo-1505664194779-8beaceb93744?auto=format&fit=crop&q=80&w=400'
-  },
-  { 
-    id: 3, 
-    kode_buku: 'LAW-003', 
-    judul: 'Hukum Tata Negara Indonesia', 
-    penulis: 'Jimly Asshiddiqie', 
-    penerbit: 'Rajawali Pers', 
-    tahun: 2022, 
-    kategori: 'HTN', 
-    lokasi_rak: 'C-02', 
-    status: BookStatus.TERSEDIA,
-    cover: 'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&q=80&w=400'
   }
 ];
 
 export const MOCK_PEMINJAMAN: Peminjaman[] = [
   {
     id: 1,
-    kode_buku: 'LAW-002',
+    kode_buku: 'LAW-001',
     user_id: 3,
     nama_peminjam: 'Ahmad Bagus Pratama',
     tanggal_pinjam: '2024-03-10',
@@ -101,15 +77,42 @@ class LibraryStore {
   getBuku() { return this.buku; }
   getPeminjaman() { return this.peminjaman; }
   getFakultas() { return this.fakultas; }
+  getUsers() { return this.users; }
 
-  login(username: string) {
-    return this.users.find(u => u.username === username);
+  login(username: string, password?: string) {
+    const user = this.users.find(u => u.username === username);
+    if (user && user.password === password) return user;
+    // For demo convenience if no password provided (matching existing behavior)
+    if (user && !password) return user;
+    return null;
   }
 
   getUserByBarcode(barcode: string) {
     return this.users.find(u => u.barcode === barcode);
   }
 
+  // User Management
+  addUser(userData: Omit<User, 'id'>) {
+    const newId = this.users.length > 0 ? Math.max(...this.users.map(u => u.id)) + 1 : 1;
+    const newUser = { ...userData, id: newId };
+    this.users.push(newUser);
+    return newUser;
+  }
+
+  deleteUser(id: number) {
+    this.users = this.users.filter(u => u.id !== id);
+  }
+
+  updateUserPassword(id: number, newPassword: string) {
+    const user = this.users.find(u => u.id === id);
+    if (user) {
+      user.password = newPassword;
+      return true;
+    }
+    return false;
+  }
+
+  // Collection Management
   addKoleksi(k: Omit<Koleksi, 'id'>) {
     const newK = { ...k, id: this.koleksi.length + 1 };
     this.koleksi.push(newK);
@@ -120,6 +123,7 @@ class LibraryStore {
     this.koleksi = this.koleksi.filter(k => k.id !== id);
   }
 
+  // Book Management
   addBuku(b: Omit<Buku, 'id' | 'status'>) {
     if (this.buku.some(item => item.kode_buku === b.kode_buku)) return null;
     const newB: Buku = { ...b, id: this.buku.length + 1, status: BookStatus.TERSEDIA };

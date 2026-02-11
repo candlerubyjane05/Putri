@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Repository from './pages/Repository';
 import Circulation from './pages/Circulation';
 import Inventory from './pages/Inventory';
+import UserManagement from './pages/UserManagement';
 import AiAssistant from './pages/AiAssistant';
 import { User } from './types';
 
@@ -36,8 +37,8 @@ const App: React.FC = () => {
               <Route path="/repository" element={<Repository userRole={user.role} />} />
               <Route path="/circulation" element={<Circulation />} />
               <Route path="/inventory" element={<Inventory />} />
+              <Route path="/users" element={<UserManagement />} />
               <Route path="/ai-assistant" element={<AiAssistant />} />
-              {/* Other routes can be added here */}
               <Route path="*" element={<Navigate to="/" replace />} />
             </>
           )}
