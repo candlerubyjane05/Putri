@@ -127,6 +127,10 @@ class LibraryStore {
     return newB;
   }
 
+  deleteBuku(id: number) {
+    this.buku = this.buku.filter(item => item.id !== id);
+  }
+
   pinjamBuku(kode: string, userId: number, tglKembali: string) {
     const b = this.buku.find(item => item.kode_buku === kode);
     const user = this.users.find(u => u.id === userId);

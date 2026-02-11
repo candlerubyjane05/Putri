@@ -17,7 +17,8 @@ import {
   LayoutGrid,
   List,
   Image as ImageIcon,
-  X
+  X,
+  Trash2
 } from 'lucide-react';
 
 const Inventory: React.FC = () => {
@@ -25,6 +26,7 @@ const Inventory: React.FC = () => {
   const [viewMode, setViewMode] = useState<'shelf' | 'table'>('shelf');
   const [searchTerm, setSearchTerm] = useState('');
   const [message, setMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [books, setBooks] = useState(store.getBuku());
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form states
@@ -39,7 +41,6 @@ const Inventory: React.FC = () => {
     cover: ''
   });
 
-  const books = store.getBuku();
   const filteredBooks = books.filter(b => 
     b.judul.toLowerCase().includes(searchTerm.toLowerCase()) || 
     b.kode_buku.toLowerCase().includes(searchTerm.toLowerCase())
@@ -61,6 +62,7 @@ const Inventory: React.FC = () => {
     const result = store.addBuku(form);
     if (result) {
       setMessage({ text: `Buku "${form.judul}" berhasil ditambahkan ke inventaris.`, type: 'success' });
+      setBooks(store.getBuku());
       setForm({
         kode_buku: '',
         judul: '',
@@ -74,6 +76,15 @@ const Inventory: React.FC = () => {
       setTimeout(() => setActiveTab('list'), 1500);
     } else {
       setMessage({ text: 'Gagal menambahkan buku. Kode buku mungkin sudah ada.', type: 'error' });
+    }
+  };
+
+  const handleDelete = (id: number, title: string) => {
+    if (window.confirm(`Apakah Anda yakin ingin menghapus buku "${title}"?`)) {
+      store.deleteBuku(id);
+      setBooks(store.getBuku());
+      setMessage({ text: `Buku "${title}" telah dihapus dari inventaris.`, type: 'success' });
+      setTimeout(() => setMessage(null), 3000);
     }
   };
 
@@ -144,7 +155,7 @@ const Inventory: React.FC = () => {
           {viewMode === 'shelf' ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
               {filteredBooks.map((book) => (
-                <div key={book.id} className="group bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-lg transition-all flex flex-col">
+                <div key={book.id} className="group bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-lg transition-all flex flex-col relative">
                   <div className="relative aspect-[3/4] bg-slate-100 overflow-hidden">
                     {book.cover ? (
                       <img src={book.cover} alt={book.judul} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
@@ -154,12 +165,19 @@ const Inventory: React.FC = () => {
                         <span className="text-[10px] uppercase font-bold tracking-widest">No Cover</span>
                       </div>
                     )}
-                    <div className="absolute top-2 right-2">
+                    <div className="absolute top-2 right-2 flex flex-col gap-1 items-end">
                        <span className={`px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest shadow-sm ${
                         book.status === BookStatus.TERSEDIA ? 'bg-emerald-500 text-white' : 'bg-red-500 text-white'
                       }`}>
                         {book.status}
                       </span>
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleDelete(book.id, book.judul); }}
+                        className="p-1.5 bg-white/90 hover:bg-red-500 hover:text-white text-slate-500 rounded-lg shadow-sm transition-all opacity-0 group-hover:opacity-100"
+                        title="Hapus Buku"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     </div>
                   </div>
                   <div className="p-3 flex-1 flex flex-col">
@@ -184,11 +202,12 @@ const Inventory: React.FC = () => {
                       <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Kategori</th>
                       <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Rak</th>
                       <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider text-right">Aksi</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filteredBooks.map((book) => (
-                      <tr key={book.id} className="hover:bg-slate-50 transition-colors">
+                      <tr key={book.id} className="hover:bg-slate-50 transition-colors group">
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-3">
                             <div className="w-10 h-14 bg-slate-100 rounded overflow-hidden flex-shrink-0 border border-slate-200">
@@ -224,6 +243,15 @@ const Inventory: React.FC = () => {
                           }`}>
                             {book.status}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button 
+                            onClick={() => handleDelete(book.id, book.judul)}
+                            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all opacity-0 group-hover:opacity-100"
+                            title="Hapus Buku"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </td>
                       </tr>
                     ))}
