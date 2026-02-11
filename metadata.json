@@ -1,0 +1,7 @@
+{
+  "name": "Copy of DigiLib FH UNDANA",
+  "description": "Modern library management system for Faculty of Law, featuring digital repositories, physical book lending, and AI-powered research assistance.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
