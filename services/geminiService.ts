@@ -3,7 +3,7 @@ import { GoogleGenAI } from "@google/genai";
 
 export const getGeminiAssistant = async (prompt: string) => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || 'FAKE_API_KEY_FOR_DEVELOPMENT' });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: prompt,
@@ -21,7 +21,7 @@ export const getGeminiAssistant = async (prompt: string) => {
 
 export const summarizeAbstract = async (abstract: string) => {
   try {
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || 'FAKE_API_KEY_FOR_DEVELOPMENT' });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `Summarize this legal abstract in 3 bullet points in Indonesian:\n\n${abstract}`,
