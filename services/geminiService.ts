@@ -1,8 +1,8 @@
-
 import { GoogleGenAI } from "@google/genai";
 
 export const getGeminiAssistant = async (prompt: string) => {
   try {
+    // Correctly using the API_KEY from the environment variable context
     const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
@@ -15,7 +15,7 @@ export const getGeminiAssistant = async (prompt: string) => {
     return response.text;
   } catch (error) {
     console.error("Gemini Error:", error);
-    return "Maaf, asisten cerdas sedang tidak tersedia.";
+    return "Maaf, asisten cerdas sedang tidak tersedia. Mohon periksa konfigurasi API Key.";
   }
 };
 
@@ -28,6 +28,7 @@ export const summarizeAbstract = async (abstract: string) => {
     });
     return response.text;
   } catch (error) {
+    console.error("Summarization Error:", error);
     return abstract;
   }
 };
