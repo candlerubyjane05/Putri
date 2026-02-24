@@ -26,7 +26,7 @@ export interface User {
   nama: string;
   nim_nidn: string;
   username: string;
-  password?: string; // Added password field
+  password?: string;
   role: UserRole;
   barcode?: string;
 }
@@ -64,7 +64,7 @@ export interface Peminjaman {
   id: number;
   kode_buku: string;
   user_id: number;
-  nama_peminjam: string; // Cached name for historical display
+  nama_peminjam: string;
   tanggal_pinjam: string;
   tanggal_kembali: string;
   tanggal_dikembalikan?: string;

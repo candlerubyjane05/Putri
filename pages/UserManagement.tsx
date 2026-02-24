@@ -16,7 +16,8 @@ import {
   CreditCard,
   Hash,
   Settings,
-  Coins
+  Coins,
+  Info
 } from 'lucide-react';
 
 const UserManagement: React.FC = () => {
@@ -50,9 +51,16 @@ const UserManagement: React.FC = () => {
 
   const handleAddUser = (e: React.FormEvent) => {
     e.preventDefault();
-    // Default barcode if not provided
+    
+    // Jika username kosong, gunakan NIM sebagai username default
+    const finalUsername = newUserForm.username || newUserForm.nim_nidn;
     const barcode = newUserForm.barcode || `KTM-${newUserForm.nim_nidn}`;
-    const result = store.addUser({ ...newUserForm, barcode });
+    
+    const result = store.addUser({ 
+      ...newUserForm, 
+      username: finalUsername,
+      barcode 
+    });
     
     setUsers([...store.getUsers()]);
     setIsAddModalOpen(false);
@@ -64,8 +72,8 @@ const UserManagement: React.FC = () => {
       role: UserRole.MAHASISWA,
       barcode: ''
     });
-    setMessage({ text: `Anggota ${result.nama} berhasil ditambahkan.`, type: 'success' });
-    setTimeout(() => setMessage(null), 3000);
+    setMessage({ text: `Anggota ${result.nama} berhasil ditambahkan. Mahasiswa dapat login menggunakan NIM: ${result.nim_nidn}`, type: 'success' });
+    setTimeout(() => setMessage(null), 5000);
   };
 
   const handleDeleteUser = (id: number, name: string) => {
@@ -98,6 +106,15 @@ const UserManagement: React.FC = () => {
     store.setFineAmount(fineAmount);
     setMessage({ text: `Konfigurasi sistem berhasil diperbarui.`, type: 'success' });
     setTimeout(() => setMessage(null), 3000);
+  };
+
+  // Helper untuk mengisi username otomatis dari NIM jika peran adalah Mahasiswa
+  const handleNimChange = (nim: string) => {
+    setNewUserForm(prev => ({
+      ...prev,
+      nim_nidn: nim,
+      username: prev.username === prev.nim_nidn || prev.username === '' ? nim : prev.username
+    }));
   };
 
   return (
@@ -133,7 +150,7 @@ const UserManagement: React.FC = () => {
       {message && (
         <div className={`p-4 rounded-xl flex items-center space-x-3 animate-in fade-in slide-in-from-top-4 ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
           {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
-          <span className="font-medium">{message.text}</span>
+          <span className="font-bold text-sm">{message.text}</span>
           <button onClick={() => setMessage(null)} className="ml-auto opacity-50 hover:opacity-100"><X size={16} /></button>
         </div>
       )}
@@ -239,8 +256,8 @@ const UserManagement: React.FC = () => {
             <div className="p-10">
               <div className="flex justify-between items-center mb-8">
                 <div>
-                  <h3 className="text-2xl font-black text-slate-900">Tambah Anggota Baru</h3>
-                  <p className="text-slate-400 text-sm font-medium">Daftarkan mahasiswa atau dosen ke sistem.</p>
+                  <h3 className="text-2xl font-black text-slate-900">Registrasi Mahasiswa/Dosen</h3>
+                  <p className="text-slate-400 text-sm font-medium">NIM/NIDN akan menjadi identitas login utama anggota.</p>
                 </div>
                 <button onClick={() => setIsAddModalOpen(false)} className="p-3 bg-slate-50 rounded-full text-slate-400 hover:text-slate-600 transition-colors"><X size={24} /></button>
               </div>
@@ -252,7 +269,7 @@ const UserManagement: React.FC = () => {
                   </label>
                   <input 
                     type="text" required
-                    placeholder="Masukkan nama lengkap..."
+                    placeholder="Masukkan nama sesuai KTM/KTP..."
                     className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 font-bold transition-all"
                     value={newUserForm.nama}
                     onChange={e => setNewUserForm({...newUserForm, nama: e.target.value})}
@@ -266,15 +283,15 @@ const UserManagement: React.FC = () => {
                     </label>
                     <input 
                       type="text" required
-                      placeholder="Nomor Identitas..."
+                      placeholder="Contoh: 2101010042"
                       className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 font-bold transition-all"
                       value={newUserForm.nim_nidn}
-                      onChange={e => setNewUserForm({...newUserForm, nim_nidn: e.target.value})}
+                      onChange={e => handleNimChange(e.target.value)}
                     />
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center">
-                      <Shield size={14} className="mr-2 text-blue-500" /> Peran
+                      <Shield size={14} className="mr-2 text-blue-500" /> Peran Akun
                     </label>
                     <select 
                       className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 font-bold transition-all"
@@ -286,14 +303,21 @@ const UserManagement: React.FC = () => {
                   </div>
                 </div>
 
+                <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100 flex items-start space-x-3">
+                   <Info size={18} className="text-blue-500 mt-0.5" />
+                   <p className="text-[11px] text-blue-700 leading-relaxed font-medium">
+                      Mahasiswa dapat masuk ke sistem menggunakan <strong>NIM</strong> atau <strong>Username</strong>. Secara default, NIM akan diatur sebagai username awal.
+                   </p>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-black text-slate-500 uppercase tracking-widest flex items-center">
-                      <Hash size={14} className="mr-2 text-blue-500" /> Username
+                      <Hash size={14} className="mr-2 text-blue-500" /> Custom Username
                     </label>
                     <input 
-                      type="text" required
-                      placeholder="Username login..."
+                      type="text"
+                      placeholder="Ganti jika perlu..."
                       className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 font-bold transition-all"
                       value={newUserForm.username}
                       onChange={e => setNewUserForm({...newUserForm, username: e.target.value})}
@@ -318,7 +342,7 @@ const UserManagement: React.FC = () => {
                   </label>
                   <input 
                     type="text"
-                    placeholder="Kosongkan untuk otomatis..."
+                    placeholder="Contoh: KTM-2101..."
                     className="w-full px-5 py-3.5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 font-bold transition-all"
                     value={newUserForm.barcode}
                     onChange={e => setNewUserForm({...newUserForm, barcode: e.target.value.toUpperCase()})}
@@ -327,7 +351,7 @@ const UserManagement: React.FC = () => {
 
                 <div className="pt-6 flex space-x-4">
                   <button type="button" onClick={() => setIsAddModalOpen(false)} className="flex-1 py-4 border border-slate-200 rounded-2xl font-black text-slate-500 hover:bg-slate-50 transition-all uppercase tracking-widest">BATAL</button>
-                  <button type="submit" className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-xl shadow-blue-500/30 transition-all uppercase tracking-widest">SIMPAN</button>
+                  <button type="submit" className="flex-1 py-4 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-2xl shadow-xl shadow-blue-500/30 transition-all uppercase tracking-widest">SIMPAN ANGGOTA</button>
                 </div>
               </form>
             </div>
@@ -338,7 +362,7 @@ const UserManagement: React.FC = () => {
       {/* Change Password Modal */}
       {isPassModalOpen && selectedUser && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full border border-white/20 animate-in zoom-in-95 duration-300">
+          <div className="bg-white rounded-[2rem] shadow-2xl max-md w-full border border-white/20 animate-in zoom-in-95 duration-300">
             <div className="p-10 text-center">
               <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Key size={32} />

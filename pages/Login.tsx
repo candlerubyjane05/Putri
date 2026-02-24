@@ -19,7 +19,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
     if (user) {
       onLogin(user);
     } else {
-      setError('Kombinasi Username/Password salah. Coba user: admin, dosen, mhs (Pass: 123)');
+      setError('Identitas atau Password salah. Gunakan Username atau NIM.');
     }
   };
 
@@ -28,7 +28,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
       <div className="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-500">
         <div className="p-10 bg-blue-600 text-white text-center relative overflow-hidden">
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-16 -mt-16"></div>
-          <div className="w-20 h-20 bg-white/20 backdrop-blur-md border border-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl animate-bounce">
+          <div className="w-20 h-20 bg-white/20 backdrop-blur-md border border-white/20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl">
             <Library size={44} />
           </div>
           <h2 className="text-3xl font-black tracking-tight">DigiLib FH UNDANA</h2>
@@ -43,13 +43,13 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
           )}
           
           <div className="space-y-1.5">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Username</label>
+            <label className="text-xs font-black text-slate-400 uppercase tracking-widest ml-1">Username / NIM</label>
             <input 
               type="text" 
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               className="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold"
-              placeholder="Masukkan username..."
+              placeholder="Masukkan Username atau NIM..."
               required
             />
           </div>
@@ -76,8 +76,8 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
         </form>
         
         <div className="px-10 pb-10 text-center">
-          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest leading-relaxed">
-            © 2024 Fakultas Hukum<br/>Universitas Nusa Cendana
+          <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
+            © 2024 Fakultas Hukum UNDANA
           </p>
         </div>
       </div>

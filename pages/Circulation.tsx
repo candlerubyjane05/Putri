@@ -1,333 +1,106 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { store } from '../store';
-import { BookStatus, PeminjamanStatus, User } from '../types';
+import { PeminjamanStatus, UserRole } from '../types';
 import { 
-  ArrowLeftRight, 
-  Search, 
-  CheckCircle, 
-  AlertCircle, 
-  RotateCcw,
-  Calendar,
-  User as UserIcon,
-  Barcode,
-  Contact,
-  BookOpen,
-  ArrowRight,
-  X,
-  Info
+  ArrowLeftRight, RotateCcw, Clock, Calendar, BookOpen, User as UserIcon, Edit2, Save, X, CheckCircle 
 } from 'lucide-react';
 
 const Circulation: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'pinjam' | 'kembali' | 'riwayat'>('pinjam');
-  
-  // State for KTM Scan
-  const [barcodeMhs, setBarcodeMhs] = useState('');
-  const [selectedMhs, setSelectedMhs] = useState<User | null>(null);
-
-  // State for Book Scan
-  const [kodeBuku, setKodeBuku] = useState('');
-  const [tglKembali, setTglKembali] = useState('');
-  
-  const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+  const [activeTab, setActiveTab] = useState<'pinjam' | 'kembali' | 'log'>('log');
+  const [editingLoan, setEditingLoan] = useState<number | null>(null);
+  const [newDueDate, setNewDueDate] = useState('');
+  const [msg, setMsg] = useState('');
 
   const history = store.getPeminjaman();
-  const currentFine = store.getFineAmount();
+  const allBooks = store.getBuku();
 
-  // Set default return date to 1 week from today when tab or student changes
-  useEffect(() => {
-    if (activeTab === 'pinjam') {
-      const today = new Date();
-      const nextWeek = new Date(today);
-      nextWeek.setDate(today.getDate() + 7);
-      setTglKembali(nextWeek.toISOString().split('T')[0]);
-    }
-  }, [activeTab, selectedMhs]);
-
-  const handleScanMhs = (e: React.FormEvent) => {
-    e.preventDefault();
-    const user = store.getUserByBarcode(barcodeMhs);
-    if (user) {
-      setSelectedMhs(user);
-      setMessage(null);
-    } else {
-      setSelectedMhs(null);
-      setMessage({ text: 'Mahasiswa tidak ditemukan. Coba: KTM-001', type: 'error' });
-    }
+  const handleUpdateDate = (id: number) => {
+    store.updateJatuhTempo(id, newDueDate);
+    setEditingLoan(null);
+    setMsg('Tanggal Jatuh Tempo berhasil diperbarui!');
+    setTimeout(() => setMsg(''), 3000);
   };
 
-  const handlePinjam = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedMhs) return;
-
-    const result = store.pinjamBuku(kodeBuku, selectedMhs.id, tglKembali);
-    if (result) {
-      setMessage({ text: `Buku ${kodeBuku} berhasil dipinjam oleh ${selectedMhs.nama}. Jatuh tempo: ${tglKembali}`, type: 'success' });
-      resetForm();
-    } else {
-      setMessage({ text: 'Buku tidak ditemukan atau sedang dipinjam.', type: 'error' });
-    }
-  };
-
-  const handleKembali = (e: React.FormEvent) => {
-    e.preventDefault();
-    const result = store.kembalikanBuku(kodeBuku);
-    if (result) {
-      const dendaMsg = result.denda > 0 ? ` Denda Keterlambatan: Rp ${result.denda.toLocaleString()}` : ' Dikembalikan tepat waktu.';
-      setMessage({ text: `Buku ${kodeBuku} telah dikembalikan.${dendaMsg}`, type: 'success' });
-      resetForm();
-    } else {
-      setMessage({ text: 'Data peminjaman tidak ditemukan.', type: 'error' });
-    }
-  };
-
-  const resetForm = () => {
-    setBarcodeMhs('');
-    setSelectedMhs(null);
-    setKodeBuku('');
-    // Reset date to 1 week from now
-    const today = new Date();
-    const nextWeek = new Date(today);
-    nextWeek.setDate(today.getDate() + 7);
-    setTglKembali(nextWeek.toISOString().split('T')[0]);
-  };
+  const formatDate = (d: string) => new Date(d).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="max-w-7xl mx-auto space-y-8 animate-in fade-in duration-500">
+      <div className="flex justify-between items-end">
         <div>
-          <h2 className="text-2xl font-bold">Layanan Sirkulasi</h2>
-          <p className="text-slate-500">Manajemen peminjaman (Scan KTM) dan pengembalian buku.</p>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">Sirkulasi & Kendali Stok</h2>
+          <p className="text-slate-500 mt-1 font-medium">Monitoring buku keluar, pengembalian, dan denda.</p>
         </div>
-        <div className="flex bg-white p-1 rounded-xl shadow-sm border border-slate-200 w-fit">
-          <button 
-            onClick={() => { setActiveTab('pinjam'); resetForm(); }}
-            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'pinjam' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            Peminjaman
-          </button>
-          <button 
-            onClick={() => { setActiveTab('kembali'); resetForm(); }}
-            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'kembali' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            Pengembalian
-          </button>
-          <button 
-            onClick={() => { setActiveTab('riwayat'); resetForm(); }}
-            className={`px-6 py-2 rounded-lg text-sm font-bold transition-all ${activeTab === 'riwayat' ? 'bg-blue-600 text-white shadow-md' : 'text-slate-500 hover:text-slate-700'}`}
-          >
-            Riwayat
-          </button>
+        <div className="bg-white p-1 rounded-2xl shadow-sm border border-slate-200 flex">
+          <button onClick={() => setActiveTab('log')} className={`px-6 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest ${activeTab === 'log' ? 'bg-blue-600 text-white' : 'text-slate-400'}`}>Buku Keluar (Log)</button>
         </div>
       </div>
 
-      {message && (
-        <div className={`p-4 rounded-xl flex items-center space-x-3 animate-in fade-in slide-in-from-top-4 ${message.type === 'success' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'}`}>
-          {message.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
-          <span className="font-medium">{message.text}</span>
-          <button onClick={() => setMessage(null)} className="ml-auto opacity-50 hover:opacity-100"><X size={16} /></button>
+      {msg && (
+        <div className="p-4 bg-emerald-50 text-emerald-700 rounded-2xl border border-emerald-100 flex items-center space-x-3 font-bold text-sm">
+          <CheckCircle size={20} /><span>{msg}</span>
         </div>
       )}
 
-      {activeTab === 'pinjam' && (
-        <div className="space-y-6">
-          <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl flex items-start space-x-3">
-            <Info className="text-amber-600 mt-0.5" size={20} />
-            <div>
-              <p className="text-sm font-bold text-amber-800 tracking-tight">Ketentuan Peminjaman:</p>
-              <p className="text-xs text-amber-700 leading-relaxed">Jangka waktu peminjaman maksimal adalah <strong>1 minggu (7 hari)</strong>. Keterlambatan pengembalian akan dikenakan denda sebesar <strong>Rp {currentFine.toLocaleString()} per hari</strong>.</p>
-            </div>
-          </div>
-
-          {!selectedMhs ? (
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 flex flex-col items-center justify-center text-center">
-              <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6">
-                <Contact size={40} />
-              </div>
-              <h3 className="text-xl font-bold mb-2">Langkah 1: Identifikasi Mahasiswa</h3>
-              <p className="text-slate-500 max-w-sm mb-8">Scan Barcode pada KTM Mahasiswa atau masukkan barcode secara manual untuk memulai proses peminjaman.</p>
+      <div className="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
+        <table className="w-full text-left">
+          <thead>
+            <tr className="bg-slate-50 border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+              <th className="px-8 py-5">Anggota (NIM)</th>
+              <th className="px-8 py-5">Koleksi Buku</th>
+              <th className="px-8 py-5">Tgl Pinjam</th>
+              <th className="px-8 py-5">Jatuh Tempo</th>
+              <th className="px-8 py-5">Denda Berjalan</th>
+              <th className="px-8 py-5 text-right">Kelola</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-50">
+            {[...history].reverse().map(p => {
+              const book = allBooks.find(b => b.kode_buku === p.kode_buku);
+              const fine = store.calculateCurrentFine(p);
+              const isEditing = editingLoan === p.id;
               
-              <form onSubmit={handleScanMhs} className="w-full max-w-md flex items-center space-x-2">
-                <div className="relative flex-1">
-                  <Barcode className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                  <input 
-                    type="text" 
-                    className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 text-lg font-bold transition-all"
-                    placeholder="SCAN BARCODE KTM"
-                    value={barcodeMhs}
-                    onChange={(e) => setBarcodeMhs(e.target.value.toUpperCase())}
-                    autoFocus
-                    required
-                  />
-                </div>
-                <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white p-4 rounded-2xl shadow-lg shadow-blue-500/30 transition-all">
-                  <ArrowRight size={24} />
-                </button>
-              </form>
-              <p className="mt-4 text-xs text-slate-400 font-medium">Contoh barcode: <span className="text-blue-500">KTM-001</span>, <span className="text-blue-500">KTM-ADMIN</span></p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Member Card */}
-              <div className="lg:col-span-1 space-y-4">
-                <div className="bg-slate-900 rounded-2xl p-6 text-white relative overflow-hidden shadow-xl">
-                  <div className="absolute top-[-20px] right-[-20px] w-40 h-40 bg-white/5 rounded-full blur-3xl"></div>
-                  <div className="flex justify-between items-start mb-12">
-                     <div>
-                       <h4 className="text-[10px] uppercase font-bold tracking-[0.2em] text-slate-400">Library Member Card</h4>
-                       <p className="text-blue-400 font-bold text-xs">FACULTY OF LAW UNDANA</p>
-                     </div>
-                     <Contact className="text-blue-500 opacity-50" size={32} />
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <h3 className="text-lg font-bold">{selectedMhs.nama}</h3>
-                      <p className="text-xs text-slate-400 font-mono tracking-wider">{selectedMhs.nim_nidn}</p>
-                    </div>
-                    <div className="flex justify-between items-end">
-                       <span className="text-[10px] bg-blue-600 px-2 py-1 rounded font-bold uppercase">{selectedMhs.role}</span>
-                       <span className="text-[10px] text-slate-500 font-mono">{selectedMhs.barcode}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <button 
-                  onClick={() => resetForm()}
-                  className="w-full py-3 text-sm font-bold text-slate-500 hover:text-red-500 transition-colors flex items-center justify-center space-x-2 border border-dashed border-slate-300 rounded-xl"
-                >
-                  <RotateCcw size={16} />
-                  <span>Ganti Mahasiswa</span>
-                </button>
-              </div>
-
-              {/* Book Input Form */}
-              <div className="lg:col-span-2 bg-white rounded-2xl shadow-sm border border-slate-100 p-8">
-                <form onSubmit={handlePinjam} className="space-y-6">
-                  <h3 className="text-xl font-bold flex items-center space-x-2">
-                    <BookOpen className="text-blue-600" size={24} />
-                    <span>Langkah 2: Scan Buku</span>
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-700">Kode / Barcode Buku</label>
-                      <div className="relative">
-                        <Barcode className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                        <input 
-                          type="text" 
-                          className="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-bold"
-                          placeholder="SCAN KODE BUKU"
-                          value={kodeBuku}
-                          onChange={(e) => setKodeBuku(e.target.value.toUpperCase())}
-                          required
-                          autoFocus
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-bold text-slate-700">Tanggal Jatuh Tempo (Otomatis +7 Hari)</label>
-                      <div className="relative">
-                        <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-                        <input 
-                          type="date" 
-                          className="w-full pl-10 pr-4 py-3 bg-slate-100 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-bold text-slate-600"
-                          value={tglKembali}
-                          onChange={(e) => setTglKembali(e.target.value)}
-                          required
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center space-x-3 text-lg">
-                    <span>Selesaikan Peminjaman</span>
-                    <ArrowRight size={20} />
-                  </button>
-                </form>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {activeTab === 'kembali' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 max-w-2xl mx-auto">
-          <form onSubmit={handleKembali} className="space-y-6">
-            <div className="text-center">
-              <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <RotateCcw size={40} />
-              </div>
-              <h3 className="text-2xl font-bold">Proses Pengembalian</h3>
-              <p className="text-slate-500 mb-8">Masukkan atau Scan kode buku untuk mengembalikan koleksi.</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-2">Kode / Barcode Buku</label>
-              <input 
-                type="text" 
-                className="w-full px-4 py-5 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-blue-500 text-center text-3xl font-black tracking-widest transition-all"
-                placeholder="SCAN BUKU"
-                value={kodeBuku}
-                onChange={(e) => setKodeBuku(e.target.value.toUpperCase())}
-                required
-                autoFocus
-              />
-            </div>
-
-            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-5 rounded-2xl shadow-lg shadow-blue-500/20 transition-all text-xl">
-              Konfirmasi Pengembalian
-            </button>
-          </form>
-        </div>
-      )}
-
-      {activeTab === 'riwayat' && (
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-100">
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Peminjam</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Kode Buku</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Tgl Pinjam</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Jatuh Tempo</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Denda</th>
-                  <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {history.map((p) => (
-                  <tr key={p.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-6 py-4">
-                       <p className="font-bold text-slate-800">{p.nama_peminjam}</p>
-                       <p className="text-[10px] text-slate-400 font-mono">ID: {p.user_id}</p>
-                    </td>
-                    <td className="px-6 py-4 font-mono font-bold text-blue-600">{p.kode_buku}</td>
-                    <td className="px-6 py-4 text-sm text-slate-500">{p.tanggal_pinjam}</td>
-                    <td className="px-6 py-4 text-sm text-slate-500">{p.tanggal_kembali}</td>
-                    <td className="px-6 py-4">
-                      {p.denda > 0 ? (
-                        <span className="text-red-600 font-bold">Rp {p.denda.toLocaleString()}</span>
+              return (
+                <tr key={p.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-8 py-5">
+                    <p className="font-black text-slate-800 text-sm leading-tight">{p.nama_peminjam}</p>
+                    <p className="text-[10px] text-blue-600 font-bold uppercase tracking-widest mt-1">ID: {p.user_id}</p>
+                  </td>
+                  <td className="px-8 py-5">
+                    <p className="font-bold text-slate-800 text-sm truncate max-w-xs">{book?.judul || p.kode_buku}</p>
+                    <p className="text-[10px] text-slate-400 font-mono tracking-widest uppercase mt-1">{p.kode_buku}</p>
+                  </td>
+                  <td className="px-8 py-5 text-sm font-medium text-slate-500">{formatDate(p.tanggal_pinjam)}</td>
+                  <td className="px-8 py-5">
+                    {isEditing ? (
+                      <input type="date" className="bg-white border rounded px-2 py-1 text-xs font-bold outline-none ring-2 ring-blue-500" value={newDueDate} onChange={e => setNewDueDate(e.target.value)} />
+                    ) : (
+                      <span className={`text-sm font-bold ${fine > 0 ? 'text-red-600' : 'text-slate-600'}`}>{formatDate(p.tanggal_kembali)}</span>
+                    )}
+                  </td>
+                  <td className="px-8 py-5">
+                    {fine > 0 ? (
+                      <div className="flex flex-col"><span className="text-red-600 font-black text-sm">Rp {fine.toLocaleString()}</span><span className="text-[8px] text-red-400 font-black uppercase animate-pulse">OVERDUE</span></div>
+                    ) : <span className="text-emerald-500 font-black text-[10px] bg-emerald-50 px-2 py-1 rounded-full border border-emerald-100 uppercase">NORMAL</span>}
+                  </td>
+                  <td className="px-8 py-5 text-right">
+                    {p.status === 'dipinjam' && (
+                      isEditing ? (
+                        <div className="flex justify-end space-x-2">
+                          <button onClick={() => handleUpdateDate(p.id)} className="p-2 bg-emerald-500 text-white rounded-lg shadow-lg"><Save size={16} /></button>
+                          <button onClick={() => setEditingLoan(null)} className="p-2 bg-slate-100 text-slate-400 rounded-lg"><X size={16} /></button>
+                        </div>
                       ) : (
-                        <span className="text-slate-400">-</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider ${
-                        p.status === 'dipinjam' ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'
-                      }`}>
-                        {p.status}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                        <button onClick={() => { setEditingLoan(p.id); setNewDueDate(p.tanggal_kembali); }} className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-all"><Edit2 size={16} /></button>
+                      )
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

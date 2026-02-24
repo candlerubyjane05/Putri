@@ -9,6 +9,8 @@ import Circulation from './pages/Circulation';
 import Inventory from './pages/Inventory';
 import UserManagement from './pages/UserManagement';
 import AiAssistant from './pages/AiAssistant';
+import Opac from './pages/Opac';
+import Profile from './pages/Profile';
 import { User } from './types';
 
 const App: React.FC = () => {
@@ -22,6 +24,10 @@ const App: React.FC = () => {
     setUser(null);
   };
 
+  const handleUpdateUser = (updatedUser: User) => {
+    setUser(updatedUser);
+  };
+
   return (
     <Router>
       <Layout user={user} onLogout={handleLogout}>
@@ -33,12 +39,14 @@ const App: React.FC = () => {
             </>
           ) : (
             <>
-              <Route path="/" element={<Dashboard />} />
+              <Route path="/" element={<Dashboard user={user} />} />
               <Route path="/repository" element={<Repository userRole={user.role} />} />
               <Route path="/circulation" element={<Circulation />} />
               <Route path="/inventory" element={<Inventory />} />
               <Route path="/users" element={<UserManagement />} />
               <Route path="/ai-assistant" element={<AiAssistant />} />
+              <Route path="/opac" element={<Opac user={user} />} />
+              <Route path="/profile" element={<Profile user={user} onUpdateUser={handleUpdateUser} />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </>
           )}
